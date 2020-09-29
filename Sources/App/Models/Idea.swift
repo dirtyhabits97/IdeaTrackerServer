@@ -19,6 +19,13 @@ final class Idea: Model, Content {
     @Parent(key: "userId")
     var user: User
     
+    @Siblings(
+        through: IdeaCategoryPivot.self,
+        from: \.$idea,
+        to: \.$category
+    )
+    var categories: [Category]
+    
     // MARK: - Lifecycle
     
     init() { }

@@ -13,6 +13,13 @@ final class Category: Model, Content {
     @Field(key: "name")
     var name: String
     
+    @Siblings(
+        through: IdeaCategoryPivot.self,
+        from: \.$category,
+        to: \.$idea
+    )
+    var ideas: [Idea]
+    
     // MARK: - Lifecycle
     
     init() { }
