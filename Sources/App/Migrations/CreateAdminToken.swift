@@ -1,8 +1,18 @@
-//
-//  File.swift
-//  
-//
-//  Created by DIGITAL008 on 10/3/20.
-//
+import Fluent
 
-import Foundation
+struct CreateAdminToken: Migration {
+    
+    func prepare(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(AdminToken.schema)
+            .id()
+            .field("value", .string, .required)
+            .unique(on: "value")
+            .field("adminId", .uuid, .required, .references(Admin.schema, "id"))
+            .create()
+    }
+    
+    func revert(on database: Database) -> EventLoopFuture<Void> {
+        database.schema(AdminToken.schema).delete()
+    }
+    
+}

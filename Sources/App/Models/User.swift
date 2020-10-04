@@ -13,6 +13,12 @@ final class User: Model, Content {
     @Field(key: "name")
     var name: String
     
+    @Field(key: "username")
+    var username: String
+    
+    @Field(key: "password")
+    var password: String
+    
     @Children(for: \.$user)
     var ideas: [Idea]
     
@@ -20,9 +26,15 @@ final class User: Model, Content {
     
     init() { }
     
-    init(id: UUID? = nil, name: String) {
+    init(
+        id: UUID? = nil,
+        name: String,
+        username: String,
+        password: String
+    ) {
         self.id = id
         self.name = name
+        self.password = password
     }
     
 }

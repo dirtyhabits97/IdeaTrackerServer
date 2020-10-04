@@ -13,8 +13,8 @@ final class Idea: Model, Content {
     @Field(key: "name")
     var name: String
     
-    @Field(key: "desc")
-    var desc: String
+    @Field(key: "description")
+    var description: String
     
     @Parent(key: "userId")
     var user: User
@@ -33,12 +33,12 @@ final class Idea: Model, Content {
     init(
         id: UUID? = nil,
         name: String,
-        desc: String,
+        description: String,
         userId: User.IDValue
     ) {
         self.id = id
         self.name = name
-        self.desc = desc
+        self.description = description
         self.$user.id = userId
     }
     

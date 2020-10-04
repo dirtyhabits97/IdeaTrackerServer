@@ -10,8 +10,8 @@ final class Admin: Model, Content {
     @ID
     var id: UUID?
     
-    @Field(key: "name")
-    var name: String
+    @Field(key: "username")
+    var username: String
     
     @Field(key: "password")
     var password: String
@@ -20,9 +20,9 @@ final class Admin: Model, Content {
     
     init() { }
     
-    init(id: UUID? = nil, name: String, password: String) {
+    init(id: UUID? = nil, username: String, password: String) {
         self.id = id
-        self.name = name
+        self.username = username
         self.password = password
     }
     
