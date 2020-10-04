@@ -32,5 +32,5 @@ public func configure(_ app: Application) throws {
  docker run --name postgres -e POSTGRES_DB=vapor_database -e POSTGRES_USER=vapor_username -e POSTGRES_PASSWORD=vapor_password -p 5432:5432 -d postgres
  
  Token:
- OZwqnZZT5V4oHTwhGMQgwA==
+ qi6IWbrB0m2GeSa3jXHnkw==
  */

@@ -7,7 +7,7 @@ struct CreateIdea: Migration {
             .id()
             .field("name", .string, .required)
             .field("description", .string, .required)
-            .field("userid", .uuid, .required, .references(User.schema, "id"))
+            .field("userId", .uuid, .required, .references(User.schema, "id"))
             .create()
     }
     
