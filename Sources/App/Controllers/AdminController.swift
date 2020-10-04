@@ -22,27 +22,69 @@ struct AdminController: RouteCollection {
         // 2. create user
         protected.post("users", use: createUserHandler(_:))
         // 3. delete user
-        protected.delete("users", ":userId", use: deleteUserHandler(_:))
+        protected.delete(
+            "users", ":userId",
+            use: deleteUserHandler(_:)
+        )
         // MARK: Ideas
         // 1. list all the ideas
         protected.get("ideas", use: getAllIdeasHandler(_:))
         // 2. create idea
         protected.post("ideas", use: createIdeaHandler(_:))
         // 3. delete idea
-        protected.delete("ideas", ":ideaId", use: deleteIdeaHandler(_:))
+        protected.delete(
+            "ideas", ":ideaId",
+            use: deleteIdeaHandler(_:)
+        )
         // 4. update idea
-        protected.put("ideas", ":ideaId", use: updateIdeaHandler(_:))
+        protected.put(
+            "ideas", ":ideaId",
+            use: updateIdeaHandler(_:)
+        )
         // 5. add category to idea
         protected.post(
             "ideas", ":ideaId",
-            "categories", "categoryId",
+            "categories", ":categoryId",
             use: addCategoryToIdeaHandler(_:)
         )
         // 6. delete category from idea
         protected.delete(
             "ideas", ":ideaId",
-            "categories", "categoryId",
+            "categories", ":categoryId",
             use: removeCategoryFromIdeaHandler(_:)
+        )
+        // 7. list all the idea's categories
+        protected.get(
+            "ideas", ":ideaId",
+            "categories",
+            use: getAllCategoriesFromIdeaHandler(_:)
+        )
+        // MARK: Categories
+        // 1. list all the categories
+        protected.get("categories", use: getAllCategoriesHandler(_:))
+        // 2. create category
+        protected.post("categories", use: createCategoryHandler(_:))
+        // 3. delete category
+        protected.delete(
+            "categories", ":categoryId",
+            use: deleteCategoryHandler(_:)
+        )
+        // 4. update category
+        protected.put(
+            "categories", ":categoryId",
+            use: updateCategoryHandler(_:)
+        )
+        // 5. list all the category's ideas
+        protected.get(
+            "categories", ":categoryId",
+            "ideas",
+            use: getAllIdeasFromCategory(_:)
+        )
+        // MARK: Database
+        // 1. reset categories
+        protected.get(
+            "reset", "categories",
+            use: resetCategoriesHandler(_:)
         )
     }
     
@@ -75,7 +117,7 @@ struct AdminController: RouteCollection {
         User
             .query(on: req.db)
             .all()
-            .map({ users in users.map({ $0.toPublic()} )})
+            .map({ users in users.map({ $0.toPublic()}) })
     }
     
     func createUserHandler(_ req: Request) throws -> EventLoopFuture<PublicUserData> {
@@ -175,8 +217,80 @@ struct AdminController: RouteCollection {
             })
     }
     
+    func getAllCategoriesFromIdeaHandler(_ req: Request) throws -> EventLoopFuture<[Category]> {
+        Idea
+            .find(req.parameters.get("ideaId"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .flatMap({ idea in
+                idea.$categories
+                    .query(on: req.db)
+                    .all()
+            })
+    }
+    
     // MARK: - Category handlers
     
+    func getAllCategoriesHandler(_ req: Request) throws -> EventLoopFuture<[Category]> {
+        Category
+            .query(on: req.db)
+            .all()
+    }
+    
+    func createCategoryHandler(_ req: Request) throws -> EventLoopFuture<Category> {
+        let category = try req.content.decode(Category.self)
+        return category
+            .save(on: req.db)
+            .map { category }
+    }
+    
+    func deleteCategoryHandler(_ req: Request) throws -> EventLoopFuture<HTTPStatus> {
+        Category
+            .find(req.parameters.get("categoryId"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .flatMap({ category in
+                category
+                    .delete(on: req.db)
+                    .transform(to: .noContent)
+            })
+    }
+    
+    func updateCategoryHandler(_ req: Request) throws -> EventLoopFuture<Category> {
+        let updatedCategory = try req.content.decode(Category.self)
+        return Category
+            .find(req.parameters.get("categoryId"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .flatMap({ category in
+                category.name = updatedCategory.name
+                return category
+                    .save(on: req.db)
+                    .map { category }
+            })
+    }
+    
+    func getAllIdeasFromCategory(_ req: Request) throws -> EventLoopFuture<[Idea]> {
+        Category
+            .find(req.parameters.get("categoryId"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .flatMap({ category in
+                category
+                    .$ideas
+                    .query(on: req.db)
+                    .all()
+            })
+    }
+    
+    // MARK: - Database handlers
+    
+    func resetCategoriesHandler(_ req: Request) throws -> EventLoopFuture<HTTPStatus> {
+        let pivotMigration = CreateIdeaCategoryPivot()
+        let categoryMigration = CreateCategory()
+        return pivotMigration
+            .revert(on: req.db)
+            .flatMap({ categoryMigration.revert(on: req.db) })
+            .flatMap({ categoryMigration.prepare(on: req.db) })
+            .flatMap({ pivotMigration.prepare(on: req.db) })
+            .transform(to: .noContent)
+    }
 }
 
 // TODO: Move this to the IdeasController once it is implemented
