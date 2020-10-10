@@ -26,6 +26,11 @@ struct AdminController: RouteCollection {
             "users", ":userId",
             use: deleteUserHandler(_:)
         )
+        // 4. update user
+        protected.put(
+            "users", ":userId",
+            use: updateUserHandler(_:)
+        )
         // MARK: Ideas
         // 1. list all the ideas
         protected.get("ideas", use: getAllIdeasHandler(_:))
@@ -136,6 +141,28 @@ struct AdminController: RouteCollection {
                 user
                     .delete(on: req.db)
                     .transform(to: .noContent)
+            })
+    }
+    
+    func updateUserHandler(_ req: Request) throws -> EventLoopFuture<PublicUserData> {
+        let updatedUser = try req.content.decode(User.self)
+        // if the password is empty, do not hash
+        if !updatedUser.password.isEmpty {
+            updatedUser.password = try Bcrypt.hash(updatedUser.password)
+        }
+        return User
+            .find(req.parameters.get("userId"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .flatMap({ user in
+                user.name = updatedUser.name
+                user.username = updatedUser.username
+                // if the password is empty, do not update the password
+                if !updatedUser.password.isEmpty {
+                    user.password = updatedUser.password
+                }
+                return user
+                    .save(on: req.db)
+                    .map({ user.toPublic() })
             })
     }
     
@@ -291,6 +318,7 @@ struct AdminController: RouteCollection {
             .flatMap({ pivotMigration.prepare(on: req.db) })
             .transform(to: .noContent)
     }
+    
 }
 
 // TODO: Move this to the IdeasController once it is implemented
