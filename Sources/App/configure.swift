@@ -19,6 +19,7 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreateAdmin())
     app.migrations.add(CreateAdminToken())
     app.migrations.add(CreateUser())
+    app.migrations.add(CreateUserToken())
     app.migrations.add(CreateIdea())
     app.migrations.add(CreateCategory())
     app.migrations.add(CreateIdeaCategoryPivot())
