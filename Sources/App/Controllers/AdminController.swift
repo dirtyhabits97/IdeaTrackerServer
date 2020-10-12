@@ -126,6 +126,8 @@ struct AdminController: RouteCollection {
     }
     
     func createUserHandler(_ req: Request) throws -> EventLoopFuture<PublicUserData> {
+        // validations for the user params
+        try User.validate(content: req)
         let user = try req.content.decode(User.self)
         user.password = try Bcrypt.hash(user.password)
         return user

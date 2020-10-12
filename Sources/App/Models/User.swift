@@ -38,3 +38,24 @@ final class User: Model, Content {
     }
     
 }
+
+// MARK: - Validations
+
+extension User: Validatable {
+    
+    static func validations(_ validations: inout Validations) {
+        validations.add(
+            "name", as: String.self,
+            is: .ascii
+        )
+        validations.add(
+            "username", as: String.self,
+            is: .alphanumeric && .count(3...)
+        )
+        validations.add(
+            "password", as: String.self,
+            is: .count(8...)
+        )
+    }
+    
+}
